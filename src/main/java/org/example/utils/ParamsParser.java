@@ -1,4 +1,6 @@
-package org.example;
+package org.example.utils;
+
+import org.example.CrowdinParams;
 
 public class ParamsParser {
     public static CrowdinParams parseArgs(String[] args) {
