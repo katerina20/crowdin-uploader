@@ -23,6 +23,6 @@ public class FileMatcher {
     }
 
     private static void validate(String wildcard) {
-        if (!wildcard.contains(".")) throw new CrowdinUploaderException("Invalid wildcard. Extension is must.");
+        if (!wildcard.contains(".")) throw new CrowdinUploaderException("Invalid wildcard. Extension is required.");
     }
 }

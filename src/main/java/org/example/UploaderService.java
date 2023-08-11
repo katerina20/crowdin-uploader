@@ -14,6 +14,9 @@ import org.example.utils.FileMatcher;
 import java.io.FileInputStream;
 import java.util.Arrays;
 
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
+
 @Log4j2
 public class UploaderService {
     private final Long projectId;
@@ -39,25 +42,28 @@ public class UploaderService {
         log.info("Uploading {}...", fileName);
         Long storageId = Try.of(() -> storageApi.addStorage(fileName, new FileInputStream(fileName)))
                             .map(response -> response.getData().getId())
-                            .getOrElseThrow(this::handleUploadException);
+                            .onFailure(this::handleUploadException)
+                            .get();
 
+        if (isNull(storageId)) throw new CrowdinUploaderException("Error: Failed to obtain storage ID.");
         AddFileRequest addFileRequest = new AddFileRequest();
         addFileRequest.setStorageId(storageId);
         addFileRequest.setName(fileName);
 
-        Try.of(() -> sourceFilesApi.addFile(projectId, addFileRequest))
-           .getOrElseThrow(this::handleUploadException);
-
-        log.info("File {} successfully uploaded!", fileName);
+        var response = Try.of(() -> sourceFilesApi.addFile(projectId, addFileRequest))
+                          .onFailure(this::handleUploadException).getOrNull();
+        if (nonNull(response) && "active".equals(response.getData().getStatus()))
+            log.info("File {} successfully uploaded!", fileName);
+        else log.error("File {} was not uploaded.", fileName);
     }
 
-    private CrowdinUploaderException handleUploadException(Throwable e) {
-        if (e instanceof HttpException) {
-            return new CrowdinUploaderException("Error: " + ((HttpException) e).getError().getMessage());
-        } else if (e instanceof HttpBadRequestException) {
-            return new CrowdinUploaderException("Error: File with this name already exists.");
+    private void handleUploadException(Throwable e) {
+        if (e instanceof HttpBadRequestException) {
+            log.error("Error: File with this name already exists.");
+        } else if (e instanceof HttpException) {
+            throw new CrowdinUploaderException("Error: " + ((HttpException) e).getError().getMessage());
         } else {
-            return new CrowdinUploaderException("Error: " + e.getMessage());
+            throw new CrowdinUploaderException("Error: " + e.getMessage());
         }
     }
 }
