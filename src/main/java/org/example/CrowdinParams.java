@@ -6,7 +6,7 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class CrowdinParams {
-    private String projectId;
+    private Long projectId;
     private String token;
     private String wildcard;
 }

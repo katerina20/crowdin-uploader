@@ -14,6 +14,6 @@ public class FileMatcher {
 
     private static String wildcardToRegex(String wildcard) {
         return wildcard.replace(".", "\\.")
-                       .replace("*", ".*");
+                       .replace("*", ".+");
     }
 }
