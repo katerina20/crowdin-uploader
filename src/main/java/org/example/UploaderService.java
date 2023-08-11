@@ -43,7 +43,7 @@ public class UploaderService {
         Long storageId = Try.of(() -> storageApi.addStorage(fileName, new FileInputStream(fileName)))
                             .map(response -> response.getData().getId())
                             .onFailure(this::handleUploadException)
-                            .get();
+                            .getOrNull();
 
         if (isNull(storageId)) throw new CrowdinUploaderException("Error: Failed to obtain storage ID.");
         AddFileRequest addFileRequest = new AddFileRequest();
